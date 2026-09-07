@@ -1,0 +1,17 @@
+# Ignore everything by default.
+*
+
+# Track this file.
+!.gitignore
+
+# Enter wp-content, but ignore its contents by default.
+!wp-content/
+wp-content/*
+
+# Track plugins and everything inside them.
+!wp-content/plugins/
+!wp-content/plugins/**
+
+# Track themes and everything inside them.
+!wp-content/themes/
+!wp-content/themes/**
