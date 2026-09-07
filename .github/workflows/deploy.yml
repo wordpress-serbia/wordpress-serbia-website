@@ -1,0 +1,48 @@
+name: Deploy to production
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure deployment SSH key
+        env:
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_KNOWN_HOSTS: ${{ secrets.SERVER_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/server_deploy_key
+          chmod 600 ~/.ssh/server_deploy_key
+          printf '%s\n' "$SERVER_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Push main to server
+        env:
+          SERVER_GIT_URL: ${{ secrets.SERVER_GIT_URL }}
+          GIT_SSH_COMMAND: >-
+            ssh
+            -i ~/.ssh/server_deploy_key
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+        run: |
+          git remote add production "$SERVER_GIT_URL"
+
+          git push production HEAD:refs/heads/main
