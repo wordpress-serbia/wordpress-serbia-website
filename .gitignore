@@ -3,6 +3,7 @@
 
 # Track this file.
 !.gitignore
+!README.md
 
 # Enter wp-content, but ignore its contents by default.
 !wp-content/
