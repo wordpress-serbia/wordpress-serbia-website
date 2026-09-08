@@ -11,6 +11,8 @@ Da biste kreirali sadržaj na sajtu [wordpress-serbia.org](https://wordpress-ser
 
 ### Autor
 
+Pre nego što odete na link za kreiranje naloga, morate biti dodati u ovaj repozitory sa `write` permisijama. Ovo može da vam odobri bilo koji administrator repozitorija putem novog [Issuea](https://github.com/wordpress-serbia/wordpress-serbia-website/issues).
+
 Forma za kreiranje Autora je GitHub workflow koji se pokreće na [ovom linku](https://github.com/wordpress-serbia/wordpress-serbia-website/actions/workflows/create-wordpress-author.yml).
 
 Sa desne strane, iznad liste kreiranih Autora, nalazi se padajući meni "Run workflow". U njemu se nalazi forma sa tri polja koju treba popuniti i poslati. Nakon uspešno kreiranog naloga, dobićete email sa linkom za resetovanje lozinke. Email je skoro 100% sigurno u spamu. Pratite link, podesite lozinku i možete se ulogovati na sajt.
