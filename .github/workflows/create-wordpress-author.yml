@@ -1,0 +1,81 @@
+name: Create WordPress Author
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_login:
+        description: WordPress username
+        required: true
+        type: string
+      user_email:
+        description: Email address
+        required: true
+        type: string
+      display_name:
+        description: Display name
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: create-wordpress-user
+  cancel-in-progress: false
+
+jobs:
+  create-author:
+    name: Create Author
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Configure restricted SSH key
+        env:
+          AUTHOR_SSH_KEY: ${{ secrets.AUTHOR_SSH_KEY }}
+          SERVER_KNOWN_HOSTS: ${{ secrets.SERVER_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$AUTHOR_SSH_KEY" > ~/.ssh/create_author_key
+          chmod 600 ~/.ssh/create_author_key
+          printf '%s\n' "$SERVER_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Validate input
+        env:
+          USER_LOGIN: ${{ inputs.user_login }}
+          USER_EMAIL: ${{ inputs.user_email }}
+          DISPLAY_NAME: ${{ inputs.display_name }}
+        run: |
+          [[ "$USER_LOGIN" =~ ^[A-Za-z0-9._@-]{1,60}$ ]] ||
+            { echo "Invalid username"; exit 1; }
+
+          [[ "$USER_EMAIL" == *@*.* ]] ||
+            { echo "Invalid email address"; exit 1; }
+
+          [ -n "$DISPLAY_NAME" ] ||
+            { echo "Display name is required"; exit 1; }
+
+      - name: Create WordPress Author
+        env:
+          USER_LOGIN: ${{ inputs.user_login }}
+          USER_EMAIL: ${{ inputs.user_email }}
+          DISPLAY_NAME: ${{ inputs.display_name }}
+          SSH_DESTINATION: ${{ secrets.SERVER_SSH_DESTINATION }}
+          SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
+        run: |
+          encoded_login="$(printf '%s' "$USER_LOGIN" | base64 -w 0)"
+          encoded_email="$(printf '%s' "$USER_EMAIL" | base64 -w 0)"
+          encoded_name="$(printf '%s' "$DISPLAY_NAME" | base64 -w 0)"
+
+          user_id="$(
+            ssh \
+              -i ~/.ssh/create_author_key \
+              -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes \
+              -p "$SSH_PORT" \
+              "$SSH_DESTINATION" \
+              "create-author $encoded_login $encoded_email $encoded_name"
+          )"
+
+          echo "Created WordPress Author with user ID: $user_id"
